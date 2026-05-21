@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>The Obsession Run: Alto Edition</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;500&display=swap" rel="stylesheet">
+
+<style>
+html,body{ margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:#000; font-family: 'Quicksand', sans-serif; touch-action:manipulation; }
+.screen{ position:fixed; inset:0; display:flex; justify-content:center; align-items:center; flex-direction:column; color:white; }
+
+/* START PAGE */
+#start-page{ background:#000; z-index:100; }
+.cool-start-btn{ padding:15px 40px; background:rgba(255,255,255,0.05); color:white; border:1px solid rgba(255,255,255,0.3); border-radius:30px; font-size:16px; letter-spacing:4px; text-transform: uppercase; font-weight: 300; }
+
+/* STORY */
+#story-container{ display:none; background:#000; overflow-y:auto; padding:20px; box-sizing:border-box; z-index:90; }
+.chat-row{ width:100%; display:none; align-items:flex-end; margin-bottom:12px; animation:fadeIn 0.4s forwards; }
+@keyframes fadeIn{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); } }
+.row-man{ justify-content:flex-start; }
+.row-woman{ justify-content:flex-end; }
+.avatar{ width:45px; height:45px; border-radius:50%; object-fit:cover; border:2px solid; background: #222; }
+.avatar-man{ border-color:#00f2fe; }
+.avatar-woman{ border-color:#ff0080; order:2; }
+.bubble{ max-width:70%; padding:12px; border-radius:15px; margin:0 10px; font-size:14px; font-weight: 300; }
+.man-msg{ border:1px solid #00f2fe; color:#00f2fe; background:rgba(0,242,254,0.08); }
+.woman-msg{ border:1px solid #ff0080; color:#ff0080; background:rgba(255,0,128,0.08); order:1; }
+
+/* LOADING */
+#loading-screen{ display:none; background:#000; z-index:110; }
+.progress-bar{ width:70%; height:2px; background:#222; margin-top:20px; overflow:hidden; }
+.progress-fill{ width:0%; height:100%; background:white; transition:2.5s linear; }
+
+/* GAME UI */
+#game-screen{ display:none; background:black; overflow:hidden; }
+#gameCanvas{ position:absolute; inset:0; width:100%; height:100%; }
+#score-box{ position:absolute; top:30px; left:30px; color:white; font-size:38px; font-weight:300; z-index:10; opacity: 0.8; }
+
+#countdown-overlay{ position:absolute; inset:0; display:none; flex-direction: column; justify-content:center; align-items:center; z-index:30; background:rgba(0,0,0,0.85); text-align: center; padding: 30px; box-sizing: border-box; }
+#instruction-box { max-width: 500px; border-top: 1px solid rgba(255,255,255,0.1); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 35px 0; margin-bottom: 25px; }
+#instruction-text { font-size: 16px; color: #fff; letter-spacing: 3px; font-weight: 300; line-height: 2; text-transform: uppercase; }
+#countdown-number { font-size: 60px; color: white; font-weight: 300; }
+
+/* ENDING SCREEN */
+#ending-screen { display:none; background:rgba(0,0,0,0.95); z-index:500; text-align:center; opacity:0; transition: opacity 2s ease-in; }
+#ending-box { max-width: 500px; border-top: 1px solid rgba(255,255,255,0.1); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 40px 20px; }
+.ending-text { font-size: 18px; color: #fff; letter-spacing: 4px; font-weight: 300; line-height: 1.8; text-transform: uppercase; }
+.heart { color: #ff0080; font-size: 32px; margin-top: 30px; animation: pulse 2s infinite; }
+@keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 0.8; } }
+
+.game-char{ position:absolute; width:38px; height:38px; border-radius:50%; object-fit:cover; z-index:15; display: none; background: #222; }
+#game-woman{ border:2px solid #ff0080; }
+#game-man{ border:2px solid #00f2fe; }
+#hint{ position:fixed; bottom:20px; width:100%; text-align:center; color:#444; font-size: 13px; letter-spacing: 2px; font-weight: 300; z-index:200; text-transform: uppercase; }
+</style>
+</head>
+
+<body>
+
+<audio id="bg-audio" loop>
+    <source src="bg-music.mp3" type="audio/mpeg">
+</audio>
+
+<div id="start-page" class="screen">
+    <h1 style="font-weight:300; letter-spacing:12px; font-size: 42px; margin-bottom: 50px;">THE CHASE</h1>
+    <button id="start-btn" class="cool-start-btn">BEGIN JOURNEY</button>
+</div>
+
+<div id="story-container" class="screen">
+    <div class="chat-row row-man"><img src="1000103322.jpg" class="avatar avatar-man"><div class="bubble man-msg">Hey Areebah...Can I talk to you???</div></div>
+    <div class="chat-row row-woman"><img src="1000103323.jpg" class="avatar avatar-woman"><div class="bubble woman-msg">Of course...</div></div>
+    <div class="chat-row row-man"><img src="1000103322.jpg" class="avatar avatar-man"><div class="bubble man-msg">Actually I love you...</div></div>
+    <div class="chat-row row-woman"><img src="1000103323.jpg" class="avatar avatar-woman"><div class="bubble woman-msg">I hate relationships...</div></div>
+    <div class="chat-row row-man"><img src="1000103322.jpg" class="avatar avatar-man"><div class="bubble man-msg">But I am obsessed with you...</div></div>
+    <div class="chat-row row-woman"><img src="1000103323.jpg" class="avatar avatar-woman"><div class="bubble woman-msg">So??? Is that my mistake?</div></div>
+    <div class="chat-row row-man"><img src="1000103322.jpg" class="avatar avatar-man"><div class="bubble man-msg">Please accept it...</div></div>
+    <div class="chat-row row-woman"><img src="1000103323.jpg" class="avatar avatar-woman"><div class="bubble woman-msg">No. Never.</div></div>
+    <div class="chat-row row-man"><img src="1000103322.jpg" class="avatar avatar-man"><div class="bubble man-msg">I will chase you until I achieve you...</div></div>
+    <div class="chat-row row-woman"><img src="1000103323.jpg" class="avatar avatar-woman"><div class="bubble woman-msg">Catch me if you can 😏</div></div>
+</div>
+
+<div id="loading-screen" class="screen">
+    <div style="letter-spacing:6px; font-weight:300; font-size: 14px; color: #888; text-transform: uppercase;">PREPARING ATMOSPHERE</div>
+    <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
+</div>
+
+<div id="game-screen" class="screen">
+    <canvas id="gameCanvas"></canvas>
+    <div id="score-box"><span id="dist">0</span></div>
+    
+    <div id="countdown-overlay">
+        <div id="instruction-box">
+            <div id="instruction-text">
+                Tap to jump and avoid the obstacles.<br>
+                If you fail Ayan will catch you<br>
+                and you will be his....
+            </div>
+        </div>
+        <div id="countdown-number">5</div>
+    </div>
+
+    <img src="1000103323.jpg" id="game-woman" class="game-char">
+    <img src="1000103322.jpg" id="game-man" class="game-char">
+</div>
+
+<div id="ending-screen" class="screen">
+    <div id="ending-box">
+        <div class="ending-text">Ayan caught you.</div>
+        <div class="ending-text">Now, you are only Ayan's......</div>
+    </div>
+    <div class="heart">❤️</div>
+</div>
+
+<div id="hint">Tap to continue</div>
+
+<script>
+const screens = { 
+    start:document.getElementById('start-page'), 
+    story:document.getElementById('story-container'), 
+    load:document.getElementById('loading-screen'), 
+    game:document.getElementById('game-screen'),
+    ending:document.getElementById('ending-screen')
+};
+const woman = document.getElementById('game-woman');
+const man = document.getElementById('game-man');
+const progressFill = document.getElementById('progress-fill');
+const countdownOverlay = document.getElementById('countdown-overlay');
+const countdownNum = document.getElementById('countdown-number');
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+const audio = document.getElementById('bg-audio');
+
+let step = 0;
+let terrain = [];
+let obstacles = [];
+let speed = 3.2; 
+let cameraX = 0;
+let distance = 0;
+let gameActive = false;
+let velocityY = 0;
+let gravity = 0.7;
+let isJumping = false;
+let gameStartTime = 0;
+let charYCurrent = 0;
+let lastObstacleTime = 0;
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+// LOOPING SKY CYCLE
+const skyColors = [
+    { top: [16, 32, 64], bot: [42, 82, 152] },      // Night
+    { top: [255, 126, 95], bot: [254, 180, 123] }, // Sunrise
+    { top: [43, 192, 228], bot: [234, 236, 198] }, // Day
+    { top: [252, 74, 26], bot: [247, 183, 51] }    // Sunset
+];
+
+const CYCLE_LENGTH = 4000; // Total distance for one full day/night loop
+
+function lerpColor(a, b, t) {
+    return a.map((v, i) => Math.floor(v + (b[i] - v) * t));
+}
+
+function getSkyColor() {
+    let loopDist = distance % CYCLE_LENGTH; // Modulo creates the loop
+    let section = CYCLE_LENGTH / skyColors.length;
+    let index = Math.floor(loopDist / section);
+    let nextIndex = (index + 1) % skyColors.length;
+    let t = (loopDist % section) / section;
+
+    let top = lerpColor(skyColors[index].top, skyColors[nextIndex].top, t);
+    let bot = lerpColor(skyColors[index].bot, skyColors[nextIndex].bot, t);
+    
+    return { top: `rgb(${top.join(',')})`, bot: `rgb(${bot.join(',')})` };
+}
+
+document.getElementById('start-btn').onclick = ()=>{
+    screens.start.style.display='none';
+    screens.story.style.display='flex';
+    document.getElementById('hint').style.display='block';
+    audio.play().catch(e => console.log("Audio waiting"));
+    showNext();
+};
+
+window.onclick = ()=>{
+    if(screens.story.style.display==='flex') showNext();
+    if(gameActive) jump();
+    if(screens.ending.style.opacity === "1") location.reload();
+};
+
+function showNext(){
+    const rows = document.querySelectorAll('.chat-row');
+    if(step < rows.length){
+        rows[step].style.display='flex';
+        screens.story.scrollTop = screens.story.scrollHeight;
+        step++;
+    } else {
+        startLoading();
+    }
+}
+
+function startLoading(){
+    screens.story.style.display='none';
+    document.getElementById('hint').style.display='none';
+    screens.load.style.display='flex';
+    setTimeout(()=>{ progressFill.style.width='100%'; },100);
+    setTimeout(()=>{
+        screens.load.style.display='none';
+        startGame();
+    },2300);
+}
+
+function startGame(){
+    screens.game.style.display='flex';
+    startCountdown();
+}
+
+function startCountdown(){
+    let time = 5;
+    countdownOverlay.style.display='flex';
+    countdownNum.innerText = time;
+    let timer = setInterval(()=>{
+        time--;
+        countdownNum.innerText = time;
+        if(time <= 0){
+            clearInterval(timer);
+            countdownOverlay.style.display='none';
+            beginRun();
+        }
+    },1000);
+}
+
+function generateTerrain(){
+    terrain=[];
+    let x=0;
+    let y=canvas.height*0.72;
+    while(x<15000){
+        y += (Math.random()-0.5)*110;
+        if(y > canvas.height-100) y = canvas.height-100;
+        if(y < canvas.height*0.45) y = canvas.height*0.45;
+        terrain.push({x,y});
+        x += 220;
+    }
+}
+generateTerrain();
+
+function getTerrainY(x){
+    for(let i=0;i<terrain.length-1;i++){
+        let p1 = terrain[i];
+        let p2 = terrain[i+1];
+        if(x>=p1.x && x<=p2.x){
+            let t=(x-p1.x)/(p2.x-p1.x);
+            return p1.y + (p2.y-p1.y)*t;
+        }
+    }
+    return canvas.height*0.7;
+}
+
+function beginRun(){
+    gameActive=true;
+    woman.style.display = 'block';
+    man.style.display = 'block';
+    charYCurrent = getTerrainY(canvas.width*0.35);
+    gameStartTime = Date.now();
+    lastObstacleTime = Date.now();
+    loop();
+}
+
+function jump(){
+    if(isJumping) return;
+    velocityY = -14;
+    isJumping = true;
+}
+
+function loop(){
+    if(!gameActive) return;
+    requestAnimationFrame(loop);
+    distance++;
+    cameraX += speed;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    // DRAW DYNAMIC SKY
+    let colors = getSkyColor();
+    let sky = ctx.createLinearGradient(0,0,0,canvas.height);
+    sky.addColorStop(0, colors.top);
+    sky.addColorStop(1, colors.bot);
+    ctx.fillStyle=sky;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    // BACKGROUND MOUNTAINS
+    ctx.fillStyle="rgba(26, 45, 82, 0.4)";
+    ctx.beginPath();
+    ctx.moveTo(0,canvas.height);
+    for(let i=0;i<10;i++){
+        let mx = i*250 - (cameraX*0.15 % 250);
+        let my = canvas.height*0.45 + Math.sin(i*0.8)*120;
+        ctx.lineTo(mx,my);
+    }
+    ctx.lineTo(canvas.width,canvas.height);
+    ctx.fill();
+
+    // GROUND
+    ctx.beginPath();
+    ctx.moveTo(0,canvas.height);
+    for(let i=0;i<terrain.length;i++){
+        let tx = terrain[i].x-cameraX;
+        let ty = terrain[i].y;
+        ctx.lineTo(tx,ty);
+    }
+    ctx.lineTo(canvas.width,canvas.height);
+    ctx.fillStyle="#08111f";
+    ctx.fill();
+
+    let playerX = canvas.width*0.35;
+    let groundY = getTerrainY(playerX + cameraX);
+    velocityY += gravity;
+    charYCurrent += velocityY;
+    if(charYCurrent > groundY){ charYCurrent = groundY; velocityY = 0; isJumping = false; }
+
+    woman.style.left = playerX + "px";
+    woman.style.top = (charYCurrent - 38) + "px";
+    man.style.left = (playerX - 70) + "px"; 
+    man.style.top = (charYCurrent - 38) + "px";
+
+    document.getElementById('dist').innerText = distance;
+
+    let now = Date.now();
+    let elapsedSinceStart = (now - gameStartTime)/1000;
+    
+    if(elapsedSinceStart > 5 && (now - lastObstacleTime) > 3000){
+        if(Math.random()<0.01){
+            obstacles.push({ x:cameraX+canvas.width+200 });
+            lastObstacleTime = now;
+        }
+    }
+    
+    ctx.font="24px serif"; 
+    for(let i=obstacles.length-1;i>=0;i--){
+        let obs=obstacles[i];
+        let ox=obs.x-cameraX;
+        let oy=getTerrainY(obs.x);
+        ctx.fillText("🪨", ox, oy+5);
+        
+        if(ox < playerX+25 && ox+15 > playerX && charYCurrent+15 > oy-10) gameOver();
+        if(ox < -100) obstacles.splice(i,1);
+    }
+}
+
+function gameOver(){
+    gameActive=false;
+    audio.pause();
+    man.style.left = (parseFloat(woman.style.left)-5)+"px";
+    
+    setTimeout(()=>{
+        screens.ending.style.display = 'flex';
+        setTimeout(()=>{
+            screens.ending.style.opacity = "1";
+        }, 100);
+    }, 500);
+}
+</script>
+</body>
+</html>
